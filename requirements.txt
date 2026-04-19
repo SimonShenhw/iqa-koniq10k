@@ -1,0 +1,44 @@
+# IQA Project 依赖 / dependencies
+# 针对 RTX 50 系列 (Blackwell, sm_120) — 必须使用 cu130
+# Target: RTX 50-series (Blackwell, sm_120) — cu130 required
+#
+# 安装命令 / Install command:
+#   pip install torch==2.9.1 torchvision==0.24.1 torchaudio==2.9.1 \
+#     --index-url https://download.pytorch.org/whl/cu130
+#   pip install -r requirements.txt
+
+# --- 深度学习核心 / DL core ---
+torch==2.9.1
+torchvision==0.24.1
+torchaudio==2.9.1
+
+# --- 模型库 / Model zoos ---
+timm>=1.0          # ViT 模型 / ViT models
+peft>=0.11         # LoRA 适配器 / LoRA adapters
+
+# --- XAI 可视化 / XAI ---
+pytorch-grad-cam   # CNN Grad-CAM
+
+# --- 部署 / Deployment ---
+onnx>=1.17
+onnxruntime-gpu>=1.20
+onnxruntime-directml         # Windows 原生 GPU 后端 / Windows-native GPU backend
+onnxconverter-common         # FP16 转换工具 / FP16 conversion
+# onnxruntime-tools          # Transformer 图优化（ViT）/ ViT graph optimizer
+# tensorrt                   # 可选 / optional — desktop 5090 only
+
+# --- 数值与数据 / Numerical & data ---
+numpy
+pandas
+scipy              # 提供 SRCC / PLCC / provides SRCC/PLCC
+scikit-learn
+pillow
+pyyaml             # 配置文件 / config files
+
+# --- 可视化 / Visualization ---
+matplotlib
+seaborn
+
+# --- 训练辅助 / Training utilities ---
+tqdm
+wandb              # 实验追踪 / experiment tracking (可替换为 tensorboard)

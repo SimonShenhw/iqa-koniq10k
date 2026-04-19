@@ -1,0 +1,60 @@
+# ViT-B/16 + LoRA + EMD 训练配置 / ViT-B/16 + LoRA + EMD config
+# 参数高效微调：仅训练 <1% 参数（LoRA on qkv + 新 head）
+# PEFT: <1% trainable params (LoRA on qkv + new head)
+
+experiment:
+  name: vit_b16_lora_emd
+  seed: 42
+  output_dir: outputs/
+  wandb_project: iqa_project
+  wandb_enabled: false
+
+model:
+  name: vit_lora
+  num_buckets: 10
+  distribution_mode: true
+  pretrained: true
+  backbone: vit_base_patch16_224
+  # LoRA 配置 / LoRA config
+  lora_r: 16
+  lora_alpha: 32
+  lora_dropout: 0.1
+  lora_target_modules: [qkv]      # timm ViT 将 Q/K/V 融合为单个 Linear / fused qkv
+  lora_modules_to_save: [head]    # 新 head 全量训练 / train head fully
+
+data:
+  dataset: koniq10k
+  root: data/koniq10k/
+  image_size: 224
+  resize_to: [384, 512]
+  split_seed: 42
+  split_ratio: [0.8, 0.1, 0.1]
+  num_buckets: 10
+  min_std: 0.5
+
+dataloader:
+  train_batch_size: 64            # ViT-B 显存占用较大 / ViT-B is memory-heavy
+  val_batch_size: 128
+  num_workers: 16
+  pin_memory: true
+  persistent_workers: true
+  prefetch_factor: 4
+  drop_last: true
+
+train:
+  epochs: 30
+  optimizer: adamw
+  lr_head: 1.0e-4
+  lr_backbone: 1.0e-4             # LoRA 学习率与 head 同量级 / LoRA lr ≈ head lr
+  weight_decay: 0.05              # ViT 推荐较大 wd / larger wd for ViT
+  grad_clip: 1.0
+  warmup_epochs: 3
+  scheduler: cosine
+  precision: bfloat16
+  compile: false                  # LoRA + compile 可能触发图重建，先关闭 / disable for safety
+  loss: emd
+  early_stop_patience: 5
+
+eval:
+  tta: 5crop
+  save_best_metric: srcc

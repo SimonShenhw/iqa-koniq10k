@@ -1,0 +1,58 @@
+# ResNet-50 + EMD 训练配置 / ResNet-50 + EMD training config
+# 主力模型：ImageNet 预训练主干 + EMD 分布损失
+# Primary model: ImageNet-pretrained backbone + EMD distributional loss
+
+experiment:
+  name: resnet50_emd
+  seed: 42
+  output_dir: outputs/
+  wandb_project: iqa_project
+  wandb_enabled: false
+
+model:
+  name: resnet50_emd
+  num_buckets: 10                 # 10 桶 Gaussian 目标分布 / 10-bucket Gaussian target
+  distribution_mode: true         # true=输出 softmax 概率分布 / softmax distribution output
+  pretrained: true
+
+data:
+  dataset: koniq10k
+  root: data/koniq10k/
+  image_size: 224
+  resize_to: [384, 512]
+  split_seed: 42
+  split_ratio: [0.8, 0.1, 0.1]
+  num_buckets: 10
+  min_std: 0.5                    # ≥0.5 桶单位，防止 Gaussian 退化为 one-hot
+
+dataloader:
+  train_batch_size: 128           # ResNet-50 在 5090 上 128 能用满 / saturates 5090 at bs=128
+  val_batch_size: 256
+  num_workers: 16
+  pin_memory: true
+  persistent_workers: true
+  prefetch_factor: 4
+  drop_last: true
+
+train:
+  epochs: 30
+  optimizer: adamw
+  # 两阶段训练：先冻结主干，再解冻 layer3/layer4
+  # Two-phase: head-only first, then unfreeze layer3/layer4
+  lr_head: 1.0e-4
+  lr_backbone: 1.0e-5
+  weight_decay: 1.0e-4
+  grad_clip: 1.0
+  warmup_epochs: 2
+  scheduler: cosine
+  precision: bfloat16
+  compile: true
+  loss: emd
+  freeze_schedule:
+    phase1_epochs: 5              # 前 5 epoch 冻结主干 / freeze backbone for epochs 0-4
+    unfreeze_layers: [layer3, layer4]
+  early_stop_patience: 5
+
+eval:
+  tta: 5crop
+  save_best_metric: srcc

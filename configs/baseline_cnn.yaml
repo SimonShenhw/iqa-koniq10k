@@ -1,0 +1,51 @@
+# Baseline CNN 训练配置 / Baseline CNN training config
+# 目标 / Purpose: 作为对比基线 — 简单的 4 层卷积 + MSE 损失
+#                Comparison foil — simple 4-block CNN with MSE loss
+
+experiment:
+  name: baseline_cnn_mse          # 实验名（用于 W&B 与检查点命名）/ exp name
+  seed: 42
+  output_dir: outputs/            # 输出根目录 / output root
+  wandb_project: iqa_project
+  wandb_enabled: false            # 首次运行建议 false / set false for first run
+
+model:
+  name: baseline_cnn              # 由 models/__init__.py 分派 / dispatched by models/__init__.py
+  num_buckets: 1                  # MSE 回归只输出 1 个标量 / MSE regresses a single scalar
+  distribution_mode: false        # false=MSE 标量输出 / false = MSE scalar output
+
+data:
+  dataset: koniq10k
+  root: data/koniq10k/
+  image_size: 224                 # 输入尺寸 / input size
+  resize_to: [384, 512]           # 预处理尺寸 [H, W] / pre-crop resize [H, W]
+  split_seed: 42
+  split_ratio: [0.8, 0.1, 0.1]    # train / val / test
+  num_buckets: 10                 # 即便 MSE 也生成分布 (后续可切 EMD) / still compute dist for flexibility
+  min_std: 0.5
+
+dataloader:
+  train_batch_size: 256
+  val_batch_size: 256
+  num_workers: 16                 # 9950X3D 32 线程，16 worker 安全高效
+  pin_memory: true
+  persistent_workers: true
+  prefetch_factor: 4
+  drop_last: true
+
+train:
+  epochs: 50
+  optimizer: adamw
+  lr: 1.0e-3                      # 全量从头训练 / trained from scratch
+  weight_decay: 1.0e-4
+  grad_clip: 1.0
+  warmup_epochs: 0
+  scheduler: cosine               # 余弦退火 / cosine annealing
+  precision: bfloat16             # bf16 AMP
+  compile: true                   # torch.compile
+  loss: mse                       # 基线用 MSE / MSE for baseline
+  early_stop_patience: 5          # 以 val SRCC 为准 / on val SRCC
+
+eval:
+  tta: center                     # center / 5crop / 25crop
+  save_best_metric: srcc          # 保存最佳模型的指标 / metric to track best ckpt

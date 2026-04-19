@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# 虚拟环境 / Virtual envs
+venv/
+env/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# 数据集（大文件不入 git）/ Datasets (large files — do NOT commit)
+data/koniq10k/*
+data/spaq/*
+!data/koniq10k/.gitkeep
+!data/spaq/.gitkeep
+
+# 输出产物 / Outputs
+outputs/checkpoints/*.pt
+outputs/checkpoints/*.pth
+outputs/logs/
+outputs/heatmaps/*.png
+
+# ONNX / TensorRT 模型 + 外部权重 / external weights
+*.onnx
+*.onnx.data                # PyTorch 2.11+ dynamo exporter 的外部权重文件
+*.engine
+*.trt
+
+# 项目输出根级的 ONNX 产物 / top-level ONNX artifacts under outputs/
+outputs/*.onnx
+outputs/*.onnx.data
+
+# W&B 本地缓存 / W&B local
+wandb/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Kaggle 凭证 / Kaggle creds
+kaggle.json
